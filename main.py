@@ -1,0 +1,173 @@
+import threading
+import numpy as np
+import Agent
+from Aggregator import Aggregator
+import Aggregator
+import networkx as nx
+from threading import Lock
+import matplotlib as mpl
+mpl.interactive(True)
+import matplotlib.pyplot as plt
+import time
+import random
+from cmath import inf
+from operators.projectLinSpace import projectLinSpace
+import pickle
+from checkSolutionsSpace import checkSolutionsSpace,checkSolutionsSpace_QP
+from scipy import sparse
+
+
+if __name__ == '__main__':
+    run_hsdm = True 
+    run_PPP = True 
+    N_random_tests = 100
+    print("Initializing problem...")
+    N=8   # N agents
+    T_horiz = 1 # Horizon of the multi-period Cournot game
+    N_markets = 5
+    n_reg_agents= 3# int(N/3)  # Number of "regulated" agents
+    n_reg_timesteps=1 #int(T_horiz/3)  # Number of "regulated" timesteps
+
+    print("Done")
+    # Parameters of algorithm
+    N_iter=3000
+
+    # containers for saved variables
+    x_hsdm={}
+    x_not_hsdm={}
+
+    cost_hsdm={}
+    cost_not_hsdm={}
+    random.seed(1)
+
+
+    for test in range(N_random_tests):
+        # Determine markets in which agents compete and production costs
+        n_i = [] # number of markets in which agent i participates 
+        # A_i = [] # agent production -> markets
+        quad_cost_i = [] # Quadratic prod. penalty for each product
+        lin_cost_i = [] # Linear prod. penalty
+        min_prod_i = [] # minimum production of each product for agent  i
+        markets_i = [] # markets in which i participates
+        d = np.matrix(np.random.rand(N_markets, 1 )) # Price stiffness
+        P_max = 0*np.matrix(np.random.rand(N_markets, 1 ))  # max price
+        max_prod = 10 * np.ones((N_markets, 1)) # market saturation level
+        regulated_agent = random.sample(range(N), n_reg_agents)
+        regulated_timestep = random.sample(range(T_horiz), n_reg_timesteps)
+        weight_reg_ag={}
+        lin_cost = -10 + 10 * np.random.rand(N_markets)
+        for i in regulated_agent:
+            weight_reg_ag.update({ i: 1 + np.random.rand() })
+        for i in range(N):
+            n_i.append(N_markets) #n_i.append(np.random.random_integers(1, N_markets, 1).item())
+            markets_i.append(random.sample(range(N_markets), n_i[i]))
+            quad_cost_i.append(np.zeros((n_i[i], 1)))
+            lin_cost_i.append(lin_cost)
+            min_prod_i.append(0*np.ones( (n_i[i], 1) ))
+
+        stepsize_primal=2*max(d).item()*N
+        dual_stepsize = 0.1
+        stepsize_hsdm = 1
+        exponent_hsdm = 0.8
+        # Simulation with HSDM
+        if run_hsdm:
+            time_1 = time.perf_counter() 
+            agents_hsdm = []
+            traffic_light = np.zeros((N,1))
+            completed_iteration = -1*np.ones((N,1))
+            completed_hsdm = -1*np.ones((N,1))
+            print("Initializing agents for HSDM run...")
+            param = Agent.Param(T_horiz=T_horiz, N_iter=N_iter, use_hsdm=True, \
+                    N_agents= N, N_markets=N_markets, stepsize_primal=stepsize_primal, \
+                    exponent_hsdm=exponent_hsdm, stepsize_hsdm=stepsize_hsdm)
+            common_variables = Agent.CommonVariables(d, T_horiz)
+            for i in range(N): 
+                agents_hsdm.append(Agent.Agent(i,  param, markets_i[i], quad_cost_i[i], lin_cost_i[i], min_prod_i[i], P_max, max_prod, common_variables))
+            print("Done")
+            print("Checking dimension of solution space")
+            x_osqp = checkSolutionsSpace_QP(agents_hsdm,common_variables)
+            sigma_HSDM = np.matrix(np.zeros((N_markets * T_horiz, 1) ))
+            sel_fun_gradient = []
+            for agent in agents_hsdm:
+                sel_fun_gradient.append(np.matrix(np.zeros((agent.N_dec_var, 1) )))
+            lambda_shared = np.matrix(np.zeros((agents_hsdm[0].N_shared_constr, 1) ))
+            aggregator_hsdm=Aggregator.Aggregator(agents_hsdm, N_markets, T_horiz, regulated_agent, weight_reg_ag, regulated_timestep)
+            time_2 = time.perf_counter() 
+            # initialization_time.update( { (N,g) : (time_2 - time_1) } )
+            print("Running agent threads for HSDM...")
+            cv_primal = threading.Condition()
+            cv_dual = threading.Condition()
+            cv_hsdm = threading.Condition()
+            cv_aggregate = threading.Condition()
+            for agent in agents_hsdm:
+                agent.run(lambda_shared, sigma_HSDM, completed_iteration, completed_hsdm,  traffic_light, sel_fun_gradient, cv_primal, cv_dual, cv_hsdm, cv_aggregate)
+            aggregator_hsdm.run(sigma_HSDM, completed_iteration, completed_hsdm, traffic_light, agents_hsdm, lambda_shared, sel_fun_gradient,cv_primal, cv_dual, cv_hsdm, cv_aggregate, dual_stepsize=dual_stepsize)
+            while not completed_iteration[0]==N_iter-1:
+                time.sleep(1)
+            # iteration_time.update( {(N, g) : aggregator_hsdm.avg_time })
+    ###############################
+    # Simulation without HSDM
+            if run_PPP:
+                time_1 = time.perf_counter() 
+                agents_not_hsdm = []
+                traffic_light = np.zeros((N,1))
+                completed_iteration = -1*np.ones((N,1))
+                completed_hsdm = -1*np.ones((N,1))
+                print("Initializing agents for PPP run...")
+                param = Agent.Param(T_horiz=T_horiz, N_iter=N_iter, use_hsdm=False, \
+                        N_agents= N, N_markets=N_markets, stepsize_primal=stepsize_primal, \
+                        exponent_hsdm=exponent_hsdm, stepsize_hsdm=stepsize_hsdm)
+                for i in range(N): 
+                    agents_not_hsdm.append(Agent.Agent(i,  param, markets_i[i], quad_cost_i[i], lin_cost_i[i], min_prod_i[i], P_max, max_prod, common_variables))
+                print("Done")
+                sigma_not_HSDM = np.matrix(np.zeros((N_markets * T_horiz, 1) ))
+                sel_fun_gradient_not_hsdm = []
+                for agent in agents_not_hsdm:
+                    sel_fun_gradient_not_hsdm.append(np.matrix(np.zeros((agent.N_dec_var, 1) )))
+                lambda_shared = np.matrix(np.zeros((agents_not_hsdm[0].N_shared_constr, 1) ))
+                aggregator_not_hsdm=Aggregator.Aggregator(agents_not_hsdm, N_markets, T_horiz, regulated_agent, weight_reg_ag, regulated_timestep)
+                time_2 = time.perf_counter() 
+                # initialization_time.update( { (N,g) : (time_2 - time_1) } )
+                print("Running agent threads for PPP...")
+                cv_primal = threading.Condition()
+                cv_dual = threading.Condition()
+                cv_hsdm = threading.Condition()
+                cv_aggregate = threading.Condition()
+                for agent in agents_not_hsdm:
+                    agent.run(lambda_shared, sigma_not_HSDM, completed_iteration, completed_hsdm, traffic_light, sel_fun_gradient_not_hsdm, cv_primal, cv_dual, cv_hsdm, cv_aggregate)
+                aggregator_not_hsdm.run(sigma_not_HSDM, completed_iteration, completed_hsdm, traffic_light, agents_not_hsdm, lambda_shared, sel_fun_gradient_not_hsdm, cv_primal, cv_dual, cv_hsdm, cv_aggregate,  dual_stepsize=dual_stepsize)
+                while not completed_iteration[0]==N_iter-1:
+                    time.sleep(1)
+            ################################
+            # Storing results
+            if run_hsdm:
+                for agent in agents_hsdm:
+                    x_hsdm.update({(agent.id, test):  agent.x})
+                cost_hsdm.update({ test: aggregator_hsdm.select_fun.evaluate(agents_hsdm) })
+            if run_PPP:
+                for agent in agents_not_hsdm:
+                    x_not_hsdm.update({(agent.id, test):  agent.x})
+                cost_not_hsdm.update( { test: aggregator_not_hsdm.select_fun.evaluate(agents_not_hsdm) })
+################################
+if run_hsdm:
+    residual_hsdm=aggregator_hsdm.residual
+else:
+    residual_hsdm=[]
+if run_PPP:
+    residual_not_hsdm=aggregator_not_hsdm.residual
+else:
+    residual_not_hsdm=[]
+
+if not run_hsdm:
+    sigma_HSDM=[]
+if not run_PPP:
+    sigma_not_hsdm=[]
+is_electric=[]
+
+
+if run_PPP and run_hsdm:
+    f= open('saved_sol.pkl', 'wb')  
+    pickle.dump([x_hsdm, x_not_hsdm, residual_hsdm, residual_not_hsdm, sigma_HSDM, \
+                sigma_not_HSDM, cost_hsdm, cost_not_hsdm, T_horiz, N_random_tests, N, x_osqp], f)
+    f.close
+
