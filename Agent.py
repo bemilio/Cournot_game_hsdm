@@ -75,11 +75,11 @@ class Agent:
             # Production greater than minimum value
             A_min_prod = np.kron( np.ones( (1,T_horiz) ), - np.eye(n_local_markets) ) 
             b_min_prod = -bi
-            self.A = sparse.csc_matrix( np.vstack( (A_min_prod, -1*np.eye( T_horiz * n_local_markets ), 1*np.eye( T_horiz * n_local_markets ) ) ) )
+            self.A = np.vstack( (A_min_prod, -1*np.eye( T_horiz * n_local_markets ), 1*np.eye( T_horiz * n_local_markets ) ) ) 
             self.b = np.matrix( np.vstack( (b_min_prod,  100* ( np.ones((T_horiz* n_local_markets, 1)) ), 100* ( np.ones((T_horiz* n_local_markets, 1)) )  )  ) )
-            self.Aeq = sparse.csc_matrix( (1, n_local_markets * T_horiz ) ) # dummy
+            self.Aeq = (1, n_local_markets * T_horiz ) # dummy
             self.beq =np.matrix([0])
-            self.Aall_sparse = sparse.vstack((self.A, self.Aeq))
+            self.Aall_sparse = sparse.csc_matrix(sparse.vstack((self.A, self.Aeq)))
             self.u= np.vstack((self.b, self.beq))
             self.l= np.vstack((-np.inf * np.ones((self.b.shape[0],1)), self.beq ))
 
