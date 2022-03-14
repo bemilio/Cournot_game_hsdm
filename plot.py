@@ -34,6 +34,7 @@ f.close()
 #     sigma_computed_not_hsdm = sigma_computed_not_hsdm + x_not_hsdm[(agent_id, test)]
 # print('For hsdm The difference between computed and saved sigma is: ', np.linalg.norm(sigma_computed_not_hsdm - sigma_not_hsdm))
 
+
 x_total_hsdm = np.matrix([])
 N=len(x_hsdm)
 

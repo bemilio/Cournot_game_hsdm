@@ -39,12 +39,11 @@ class CommonVariables:
         self.C = sparse.csc_matrix(np.kron(np.eye(T_horiz), np.diagflat(d) ) )
 
 class Agent:
-    def __init__(self, id, param, markets_i, quad_cost_i, lin_cost_i, min_prod_i,  P_max, max_prod, common_variables):
+    def __init__(self, id, param, markets_i, quad_cost_i, lin_cost_i, min_prod_i,  P_max, max_prod, common_variables, x0=[]):
         self.id = id
         self.param = param
         T_horiz = param.T_horiz
         self.N_dec_var =  len(markets_i)* T_horiz
-        random.seed()
         Ai = np.matrix(np.zeros( ( param.N_markets, len(markets_i)) ))
         I_mT = np.matrix(np.eye( param.N_markets ))
         for i in range(len(markets_i)):
@@ -55,7 +54,10 @@ class Agent:
         self.local_obj = self.LocalObjective(quad_cost_i, lin_cost_i, T_horiz, P_max, common_variables.C, self.loc_to_sigma)
         self.local_const = self.LocalConst(T_horiz, len(markets_i), min_prod_i)
         self.shared_const = self.SharedConst(Ai, T_horiz, max_prod, param.N_agents)
-        self.x = np.matrix(np.random.rand(self.N_dec_var)).T
+        if len(x0)==0:
+            self.x = np.matrix(np.random.rand(self.N_dec_var)).T
+        else:
+            self.x=x0
         self.N_iter = param.N_iter
         self.N_shared_constr = self.shared_const.Ai.shape[0]
 
@@ -75,9 +77,9 @@ class Agent:
             # Production greater than minimum value
             A_min_prod = np.kron( np.ones( (1,T_horiz) ), - np.eye(n_local_markets) ) 
             b_min_prod = -bi
-            self.A = np.vstack( (A_min_prod, -1*np.eye( T_horiz * n_local_markets ), 1*np.eye( T_horiz * n_local_markets ) ) ) 
+            self.A = sparse.csc_matrix(np.vstack( (A_min_prod, -1*np.eye( T_horiz * n_local_markets ), 1*np.eye( T_horiz * n_local_markets ) ) ))
             self.b = np.matrix( np.vstack( (b_min_prod,  100* ( np.ones((T_horiz* n_local_markets, 1)) ), 100* ( np.ones((T_horiz* n_local_markets, 1)) )  )  ) )
-            self.Aeq = (1, n_local_markets * T_horiz ) # dummy
+            self.Aeq = sparse.csc_matrix(np.zeros((1, n_local_markets * T_horiz ))) # dummy
             self.beq =np.matrix([0])
             self.Aall_sparse = sparse.csc_matrix(sparse.vstack((self.A, self.Aeq)))
             self.u= np.vstack((self.b, self.beq))

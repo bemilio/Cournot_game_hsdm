@@ -101,7 +101,7 @@ def checkSolutionsSpace_QP(agents_hsdm, shared_var):
             m = osqp.OSQP()
             x0 = 10*np.random.rand(Q_complete.shape[0], 1)
             y0 = 10*np.random.rand(A_all.shape[0], 1)
-            m.setup(P=Q_complete, q=q, A=A_all, l=l, u=u, verbose=True, max_iter=3000, eps_abs=10**(-8), eps_rel=10**(-8))
+            m.setup(P=Q_complete, q=q, A=A_all, l=l, u=u, verbose=False, max_iter=3000, eps_abs=10**(-8), eps_rel=10**(-8))
             m.warm_start(x=x0, y=y0)
             results = m.solve()  
             if results.info.status != 'solved':
