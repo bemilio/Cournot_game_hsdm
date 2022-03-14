@@ -15,32 +15,39 @@ from operators.projectLinSpace import projectLinSpace
 import pickle
 from checkSolutionsSpace import checkSolutionsSpace,checkSolutionsSpace_QP
 from scipy import sparse
-
+import sys
 
 if __name__ == '__main__':
     run_hsdm = True 
     run_PPP = True 
     N_random_problems = 1
-    N_random_initial_states = 5
+    N_random_initial_states = 20
     print("Initializing problem...")
     N=6   # N agents
     T_horiz = 1 # Horizon of the multi-period Cournot game
-    N_markets = 2
+    N_markets = 3
     n_reg_agents= 2# int(N/3)  # Number of "regulated" agents
     n_reg_timesteps=1 #int(T_horiz/3)  # Number of "regulated" timesteps
 
     print("Done")
     # Parameters of algorithm
-    N_iter=20000
+    N_iter=50000
 
     # containers for saved variables
     x_hsdm={}
     x_not_hsdm={}
     x0={}
+    residual_hsdm={}
+    residual_not_hsdm={}
 
     cost_hsdm={}
     cost_not_hsdm={}
-    random.seed(1)
+    if len(sys.argv) < 2:
+        seed = 1
+    else:
+        seed=int(sys.argv[1])
+    random.seed(seed)
+    print("Running with  random seed = ", seed)
     for n_init in range(N_random_initial_states):
         for n_agent in range(N):
             x0.update({ (n_init, n_agent): np.matrix(np.random.rand(N_markets* T_horiz)).T })
@@ -68,7 +75,8 @@ if __name__ == '__main__':
             markets_i.append(random.sample(range(N_markets), n_i[i]))
             quad_cost_i.append(np.zeros((n_i[i], 1)))
             lin_cost_i.append(lin_cost)
-            min_prod_i.append(-inf*np.ones( (n_i[i], 1) ))
+            
+            min_prod_i.append(-1 + 2*np.random.rand(n_i[i], 1))
 
         stepsize_primal=2*max(d).item()*N
         dual_stepsize = 0.1
@@ -150,26 +158,17 @@ if __name__ == '__main__':
                 for agent in agents_hsdm:
                     x_hsdm.update({(agent.id, test, n_init):  agent.x})
                 cost_hsdm.update({ (test, n_init): aggregator_hsdm.select_fun.evaluate(agents_hsdm) })
+                residual_hsdm.update({ (test, n_init): aggregator_hsdm.residual})
             if run_PPP:
                 for agent in agents_not_hsdm:
                     x_not_hsdm.update({(agent.id, test, n_init):  agent.x})
                 cost_not_hsdm.update( { (test, n_init): aggregator_not_hsdm.select_fun.evaluate(agents_not_hsdm) })
+                residual_not_hsdm.update({ (test, n_init): aggregator_not_hsdm.residual })
 ################################
-if run_hsdm:
-    residual_hsdm=aggregator_hsdm.residual
-else:
-    residual_hsdm=[]
-if run_PPP:
-    residual_not_hsdm=aggregator_not_hsdm.residual
-else:
-    residual_not_hsdm=[]
-
 if not run_hsdm:
     sigma_HSDM=[]
 if not run_PPP:
     sigma_not_hsdm=[]
-is_electric=[]
-
 
 if run_PPP and run_hsdm:
     f= open('saved_sol.pkl', 'wb')  
