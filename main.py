@@ -44,8 +44,10 @@ if __name__ == '__main__':
     cost_not_hsdm={}
     if len(sys.argv) < 2:
         seed = 1
+        job_id=0
     else:
         seed=int(sys.argv[1])
+        job_id = int(sys.argv[2])
     random.seed(seed)
     print("Running with  random seed = ", seed)
     for n_init in range(N_random_initial_states):
@@ -171,7 +173,8 @@ if not run_PPP:
     sigma_not_hsdm=[]
 
 if run_PPP and run_hsdm:
-    f= open('saved_sol.pkl', 'wb')  
+    filename = "saved_sol"+str(job_id)+".pkl"
+    f= open(filename, 'wb')  
     pickle.dump([x_hsdm, x_not_hsdm, residual_hsdm, residual_not_hsdm, sigma_HSDM, \
                 sigma_not_HSDM, cost_hsdm, cost_not_hsdm, T_horiz, N_random_problems, N, x_osqp], f)
     f.close
