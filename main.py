@@ -52,8 +52,7 @@ if __name__ == '__main__':
     print("Running with  random seed = ", seed)
     for n_init in range(N_random_initial_states):
         for n_agent in range(N):
-            x0.update({ (n_init, n_agent): np.matrix(10* (-0.5+(np.random.rand(N_markets* T_horiz)).T)) })
-    
+            x0.update({ (n_init, n_agent): np.matrix(10* (-0.5+(np.random.rand(N_markets* T_horiz)))).T })
 
     for test in range(N_random_problems):
         # Determine markets in which agents compete and production costs
@@ -77,7 +76,6 @@ if __name__ == '__main__':
             markets_i.append(random.sample(range(N_markets), n_i[i]))
             quad_cost_i.append(np.zeros((n_i[i], 1)))
             lin_cost_i.append(lin_cost)
-            
             min_prod_i.append(-1 + 2*np.random.rand(n_i[i], 1))
 
         stepsize_primal=2*max(d).item()*N

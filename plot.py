@@ -9,6 +9,7 @@ plt.rcParams.update({
     "text.usetex": True,
     "font.family": "serif",
     "font.serif": ["Palatino"],
+    "font.size": 14
 })
 import networkx as nx
 import numpy as np
@@ -89,8 +90,10 @@ ax.fill_between(np.arange(0, N_iter,20), np.ravel(min_residual_not_hsdm[:,:-1]),
 plt.xlabel('Iteration')
 plt.ylabel('Residual')
 plt.ylim((10**(-6), 10**(1)))
+plt.xlim((10**(1), 5*10**(4)))
+
 # plt.title('Residual')
-plt.legend()
+plt.legend(loc="lower left", fontsize=12)
 plt.savefig('Residual.pdf')  
 
 # sigma_not_electric_hsdm=[]
@@ -147,18 +150,19 @@ plt.savefig('Residual.pdf')
 # # ax.set_xticklabels=bins
 # plt.title("Advantage of HSDM")
 
-fig, ax = plt.subplots(figsize=(7, 2.5), layout='constrained') 
+fig, ax = plt.subplots(figsize=(6,5), layout='constrained') 
 avg_improvement=np.zeros((N_problems,1))
 for problem in range(N_problems):
     avg_improvement[problem] = np.median(cost_improvement_rel[problem, :])
 sorted_idx = np.argsort(np.ravel(avg_improvement))
-plt.boxplot(cost_improvement_rel[sorted_idx].T, sym="", whis =10000, vert=True, medianprops=dict(color='k'))
-plt.bar([i+1 for i in range(N_problems)], np.ravel(avg_improvement[sorted_idx]), color="lightseagreen")
+plt.boxplot(100*cost_improvement_rel[sorted_idx].T, sym="", whis =10000, vert=False, medianprops=dict(color='k'))
+plt.barh([i+1 for i in range(N_problems)], np.ravel(100*avg_improvement[sorted_idx]), color="lightseagreen")
 # ax.set_xticklabels=binsplt.title("Advantage of HSDM")
 
-plt.xticks([])
-plt.grid(axis='y')
-plt.xlabel('GNE problem')
-plt.ylabel(r'$ \frac{\phi(x_{PPP})-\phi(x_{HSDM})}{\phi(x_{PPP})}$ ')
-plt.savefig('Advantage.pdf')  
+plt.yticks([])
+plt.grid(axis='x')
+plt.ylabel('GNE problem')
+plt.xlabel(r'$ \frac{\phi(x_{PPP})-\phi(x_{HSDM})}{\phi(x_{PPP})} (\%)$ ')
+plt.xlim((0, 100))
+plt.savefig('Advantage.pdf') 
 plt.show(block=True)
