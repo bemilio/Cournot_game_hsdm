@@ -52,7 +52,7 @@ if __name__ == '__main__':
     print("Running with  random seed = ", seed)
     for n_init in range(N_random_initial_states):
         for n_agent in range(N):
-            x0.update({ (n_init, n_agent): np.matrix(np.random.rand(N_markets* T_horiz)).T })
+            x0.update({ (n_init, n_agent): np.matrix(10* (-0.5+(np.random.rand(N_markets* T_horiz)).T)) })
     
 
     for test in range(N_random_problems):
