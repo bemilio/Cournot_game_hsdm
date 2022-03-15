@@ -12,7 +12,7 @@ def backwardStep(Q, q, A_all, l, u, x0, alpha):
         # A_all = sparse.csc_matrix(np.vstack((A, Aeq)))
         q2 = q-alpha*x0
         #m.setup(P=P, q=q2, A=A_all, l=l, u=u, verbose=True)
-        m.setup(P=P, q=q2, A=A_all, l=l, u=u, verbose=False, warm_start=False, max_iter=3000, eps_abs=10**(-6), eps_rel=10**(-6))
+        m.setup(P=P, q=q2, A=A_all, l=l, u=u, verbose=False, warm_start=False, max_iter=3000, eps_abs=10**(-8), eps_rel=10**(-8))
         results = m.solve()   
         if not (results.info.status == 'maximum iterations reached'):
             break
