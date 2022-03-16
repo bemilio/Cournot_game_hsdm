@@ -18,7 +18,7 @@ from scipy import sparse
 
 check_test = False
 
-directory = '/Users/ebenenati/Repositories/Results_hsdm_ppp_academic/Statistics_15_mar/'
+directory = '/Users/ebenenati/Repositories/Results_hsdm_ppp_academic/Statistics_16_mar/'
 x_hsdm_all=[]
 x_not_hsdm_all=[]
 residual_hsdm_all=[]
@@ -83,13 +83,13 @@ N=len(x_hsdm)
 
 fig, ax = plt.subplots(figsize=(6, 2.5), layout='constrained') 
 N_iter = (average_residual_hsdm.shape[1]-1) * 20
-ax.loglog(np.arange(0, N_iter,20), np.ravel(average_residual_hsdm[:,:-1]), label="HSDM+PPP")
+ax.loglog(np.arange(0, N_iter,20), np.ravel(average_residual_hsdm[:,:-1]), label="Algorithm 1")
 ax.loglog(np.arange(0, N_iter,20), np.ravel(average_residual_not_hsdm[:,:-1]), label="PPP")
 ax.fill_between(np.arange(0, N_iter,20), np.ravel(min_residual_hsdm[:,:-1]), np.ravel(max_residual_hsdm[:,:-1]), alpha=0.2)
 ax.fill_between(np.arange(0, N_iter,20), np.ravel(min_residual_not_hsdm[:,:-1]), np.ravel(max_residual_not_hsdm[:,:-1]), alpha=0.2)
 plt.xlabel('Iteration')
 plt.ylabel('Residual')
-plt.ylim((10**(-6), 10**(1)))
+plt.ylim((10**(-8), 10**(1)))
 plt.xlim((10**(1), 5*10**(4)))
 
 # plt.title('Residual')
@@ -162,7 +162,7 @@ plt.barh([i+1 for i in range(N_problems)], np.ravel(100*avg_improvement[sorted_i
 plt.yticks([])
 plt.grid(axis='x')
 plt.ylabel('GNE problem')
-plt.xlabel(r'$ \frac{\phi(x_{PPP})-\phi(x_{HSDM})}{\phi(x_{PPP})} (\%)$ ')
+plt.xlabel(r'$ \frac{\phi(x_{\mathrm{PPP}})-\phi(x^{\star})}{\phi(x_{\mathrm{PPP}})} (\%)$ ')
 plt.xlim((0, 100))
 plt.savefig('Advantage.pdf') 
 plt.show(block=True)
