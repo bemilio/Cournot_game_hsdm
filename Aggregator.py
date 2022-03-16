@@ -6,10 +6,10 @@ import numpy as np
 from scipy import sparse
 import time
 class Aggregator:
-    def __init__(self, agents, N_markets, T_horiz, regulated_agent, weight_reg_ag, regulated_timestep):
+    def __init__(self, agents, N_markets, T_horiz, regulated_agent, weight_reg_ag, lin_weight_reg_ag, regulated_timestep):
         # the aggregator logs the primal trajectories
         self.x_traj={}
-        self.select_fun = self.SelectFun(agents, N_markets, T_horiz, regulated_agent, weight_reg_ag, regulated_timestep)
+        self.select_fun = self.SelectFun(agents, N_markets, T_horiz, regulated_agent, weight_reg_ag, lin_weight_reg_ag, regulated_timestep)
         self.avg_time =0
         pass
     def run(self, sigma, completed_iteration, completed_hsdm, traffic_light, agents, lambda_shared, sel_fun_gradient, cv_primal, cv_dual, cv_hsdm, cv_aggregate,  dual_stepsize=0.01):
@@ -81,7 +81,7 @@ class Aggregator:
                     
 
     class SelectFun:
-        def __init__(self, agents, N_markets, T_horiz, regulated_agents, weight_reg_ag, regulated_timestep):
+        def __init__(self, agents, N_markets, T_horiz, regulated_agents, weight_reg_ag, lin_weight_reg_ag, regulated_timestep):
             self.Q_i=[]
             self.q_i=[]
             self.N_dec_var_tot = 0
@@ -98,13 +98,16 @@ class Aggregator:
                         if t not in regulated_timestep:
                             Sel_reg_t[index_t: index_t + N_dec_var_per_timestep, :] = 0* Sel_reg_t[index_t: index_t + N_dec_var_per_timestep, :]
                         index_t = index_t + N_dec_var_per_timestep
-                    Q[index:index + agent.N_dec_var, index:index + agent.N_dec_var] = weight_reg_ag[agent.id] * Sel_reg_t
+                    Q[index:index + agent.N_dec_var, index:index + agent.N_dec_var] = np.diag(weight_reg_ag[agent.id]) * Sel_reg_t
                 index = index + agent.N_dec_var
             self.Q=sparse.csc_matrix(Q)
             index = 0
             for agent in agents:
                 self.Q_i.append( self.Q [index: index + agent.N_dec_var][:])
-                self.q_i.append((np.matrix(np.zeros((agent.N_dec_var, 1)))))
+                if agent.id in regulated_agents:
+                    self.q_i.append(np.matrix(lin_weight_reg_ag[agent.id]))
+                else:
+                    self.q_i.append(np.matrix(np.zeros( (agent.N_dec_var, 1) ) ))
                 index = index + agent.N_dec_var
             self.x_complete=np.matrix(np.zeros((self.N_dec_var_tot, 1)))
             self.q=np.matrix(np.zeros((self.N_dec_var_tot, 1)))

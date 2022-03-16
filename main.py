@@ -68,15 +68,18 @@ if __name__ == '__main__':
         regulated_agent = random.sample(range(N), n_reg_agents)
         regulated_timestep = random.sample(range(T_horiz), n_reg_timesteps)
         weight_reg_ag={}
+        lin_weight_reg_ag={}
         lin_cost = -10 + 10 * np.random.rand(N_markets)
-        for i in regulated_agent:
-            weight_reg_ag.update({ i: 1 + np.random.rand() })
         for i in range(N):
             n_i.append(N_markets) #n_i.append(np.random.random_integers(1, N_markets, 1).item())
             markets_i.append(random.sample(range(N_markets), n_i[i]))
             quad_cost_i.append(np.zeros((n_i[i], 1)))
             lin_cost_i.append(lin_cost)
             min_prod_i.append(-1 + 2*np.random.rand(n_i[i], 1))
+
+        for i in regulated_agent:
+            weight_reg_ag.update({ i: 1 + np.random.rand(n_i[i], 1) })
+            lin_weight_reg_ag.update({ i: -1 + 2 * np.random.rand(n_i[i], 1)  })
 
         stepsize_primal=2*max(d).item()*N
         dual_stepsize = 0.1
@@ -105,7 +108,7 @@ if __name__ == '__main__':
                 for agent in agents_hsdm:
                     sel_fun_gradient.append(np.matrix(np.zeros((agent.N_dec_var, 1) )))
                 lambda_shared = np.matrix(np.zeros((agents_hsdm[0].N_shared_constr, 1) ))
-                aggregator_hsdm=Aggregator.Aggregator(agents_hsdm, N_markets, T_horiz, regulated_agent, weight_reg_ag, regulated_timestep)
+                aggregator_hsdm=Aggregator.Aggregator(agents_hsdm, N_markets, T_horiz, regulated_agent, weight_reg_ag, lin_weight_reg_ag, regulated_timestep)
                 time_2 = time.perf_counter() 
                 # initialization_time.update( { (N,g) : (time_2 - time_1) } )
                 print("Running agent threads for HSDM...")
@@ -139,7 +142,7 @@ if __name__ == '__main__':
                 for agent in agents_not_hsdm:
                     sel_fun_gradient_not_hsdm.append(np.matrix(np.zeros((agent.N_dec_var, 1) )))
                 lambda_shared = np.matrix(np.zeros((agents_not_hsdm[0].N_shared_constr, 1) ))
-                aggregator_not_hsdm=Aggregator.Aggregator(agents_not_hsdm, N_markets, T_horiz, regulated_agent, weight_reg_ag, regulated_timestep)
+                aggregator_not_hsdm=Aggregator.Aggregator(agents_not_hsdm, N_markets, T_horiz, regulated_agent, weight_reg_ag, lin_weight_reg_ag, regulated_timestep)
                 time_2 = time.perf_counter() 
                 # initialization_time.update( { (N,g) : (time_2 - time_1) } )
                 print("Running agent threads for PPP...")
