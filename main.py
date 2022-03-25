@@ -21,7 +21,7 @@ if __name__ == '__main__':
     run_hsdm = True 
     run_PPP = True 
     exponent_hsdm_to_test = [ 0.6, 0.8, 1.0]
-    N_random_initial_states = 3
+    N_random_initial_states = 20
     print("Initializing problem...")
     N=6   # N agents
     T_horiz = 1 # Horizon of the multi-period Cournot game
@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
     print("Done")
     # Parameters of algorithm
-    N_iter=500
+    N_iter=500000
 
     # containers for saved variables
     x_hsdm={}
