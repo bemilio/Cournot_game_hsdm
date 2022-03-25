@@ -10,4 +10,4 @@ cd $PBS_O_WORKDIR
 # Run
 rm -f log.txt
 source mdp_env/bin/activate
-python3 main.py  $SEED $INDEX 0.9 > log.txt
+python3 main.py  $SEED $INDEX > log.txt

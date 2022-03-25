@@ -31,7 +31,7 @@ for filename in os.listdir(directory):
         f=open(directory+filename, 'rb')
         # f = open('/Users/ebenenati/Repositories/Results_MDP/local_results/80_agents_5000It/80_agents_5000It.pkl', 'rb')
         x_hsdm, x_not_hsdm, residual_hsdm, residual_not_hsdm, sigma_HSDM, \
-            sigma_not_hsdm, cost_hsdm, cost_not_hsdm, cost_hsdm_history, cost_not_hsdm_history, T_horiz, N_random_tests, N_agents, x_osqp = pickle.load(f)
+            sigma_not_hsdm, cost_hsdm, cost_not_hsdm, cost_hsdm_history, cost_not_hsdm_history, T_horiz, tested_hsdm_exponents, N_agents, x_osqp = pickle.load(f)
         f.close()
         x_hsdm_all.append(x_hsdm)
         x_not_hsdm_all.append(x_not_hsdm)
