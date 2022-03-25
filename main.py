@@ -21,7 +21,7 @@ if __name__ == '__main__':
     run_hsdm = True 
     run_PPP = True 
     N_random_problems = 1
-    N_random_initial_states = 20
+    N_random_initial_states = 1
     print("Initializing problem...")
     N=6   # N agents
     T_horiz = 1 # Horizon of the multi-period Cournot game
@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
     print("Done")
     # Parameters of algorithm
-    N_iter=50000
+    N_iter=500
 
     # containers for saved variables
     x_hsdm={}
@@ -41,7 +41,9 @@ if __name__ == '__main__':
     residual_not_hsdm={}
 
     cost_hsdm={}
+    cost_hsdm_history={}
     cost_not_hsdm={}
+    cost_not_hsdm_history={}
     if len(sys.argv) < 2:
         seed = 1
         job_id=0
@@ -53,7 +55,11 @@ if __name__ == '__main__':
     for n_init in range(N_random_initial_states):
         for n_agent in range(N):
             x0.update({ (n_init, n_agent): np.matrix(10* (-0.5+(np.random.rand(N_markets* T_horiz)))).T })
-
+    if len(sys.argv) < 3:
+        exponent_hsdm = 0.9
+    else:
+        exponent_hsdm = float(sys.argv[3])
+    print("Exponent of HSDM set to", exponent_hsdm)
     for test in range(N_random_problems):
         # Determine markets in which agents compete and production costs
         n_i = [] # number of markets in which agent i participates 
@@ -84,7 +90,8 @@ if __name__ == '__main__':
         stepsize_primal=2*max(d).item()*N
         dual_stepsize = 0.1
         stepsize_hsdm = 1
-        exponent_hsdm = 0.9
+        sys.argv[2]
+
         for n_init in range(N_random_initial_states):
             # Simulation with HSDM
             common_variables = Agent.CommonVariables(d, T_horiz)
@@ -162,11 +169,13 @@ if __name__ == '__main__':
                     x_hsdm.update({(agent.id, test, n_init):  agent.x})
                 cost_hsdm.update({ (test, n_init): aggregator_hsdm.select_fun.evaluate(agents_hsdm) })
                 residual_hsdm.update({ (test, n_init): aggregator_hsdm.residual})
+                cost_hsdm_history.update({ (test, n_init): aggregator_hsdm.cost_history })
             if run_PPP:
                 for agent in agents_not_hsdm:
                     x_not_hsdm.update({(agent.id, test, n_init):  agent.x})
                 cost_not_hsdm.update( { (test, n_init): aggregator_not_hsdm.select_fun.evaluate(agents_not_hsdm) })
                 residual_not_hsdm.update({ (test, n_init): aggregator_not_hsdm.residual })
+                cost_not_hsdm_history.update({ (test, n_init): aggregator_not_hsdm.cost_history })
 ################################
 if not run_hsdm:
     sigma_HSDM=[]
@@ -177,6 +186,6 @@ if run_PPP and run_hsdm:
     filename = "saved_sol"+str(job_id)+".pkl"
     f= open(filename, 'wb')  
     pickle.dump([x_hsdm, x_not_hsdm, residual_hsdm, residual_not_hsdm, sigma_HSDM, \
-                sigma_not_HSDM, cost_hsdm, cost_not_hsdm, T_horiz, N_random_problems, N, x_osqp], f)
+                sigma_not_HSDM, cost_hsdm, cost_not_hsdm, cost_hsdm_history, cost_not_hsdm_history, T_horiz, N_random_problems, N, x_osqp], f)
     f.close
 

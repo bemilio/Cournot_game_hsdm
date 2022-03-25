@@ -23,6 +23,7 @@ class Aggregator:
             # then update sigma and give green light for next iteration
             # logging residuals
             self.residual= np.zeros((1+int(agents[0].N_iter/20), 1))
+            self.cost_history= np.zeros((1+int(agents[0].N_iter/20), 1))
             for agent in agents:
                 self.x_traj.update({agent.id: np.zeros((agent.N_dec_var, agent.N_iter))})
             self.avg_time = 0
@@ -61,6 +62,7 @@ class Aggregator:
                             lambda_transformed = np.maximum(lambda_transformed, 0)
                             residual_lambda[agent.id][0]  = np.linalg.norm( lambda_shared - lambda_transformed, inf )
                             self.residual[int(iter_index/20)][0] = np.max( (np.amax(residual_x), np.amax(residual_lambda)) )
+                            self.cost_history[int(iter_index/20)][0] = self.select_fun.evaluate(agents)
                         traffic_light.fill(True)
                         cv_dual.notify_all()
                     # wait for HSDM step

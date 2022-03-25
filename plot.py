@@ -18,7 +18,8 @@ from scipy import sparse
 
 check_test = False
 
-directory = '/Users/ebenenati/Repositories/Results_hsdm_ppp_academic/Statistics_16_mar/'
+# directory = '/Users/ebenenati/Repositories/Results_hsdm_ppp_academic/Statistics_16_mar/'
+directory='/Users/ebenenati/Repositories/Cournot_game/'
 x_hsdm_all=[]
 x_not_hsdm_all=[]
 residual_hsdm_all=[]
@@ -30,7 +31,7 @@ for filename in os.listdir(directory):
         f=open(directory+filename, 'rb')
         # f = open('/Users/ebenenati/Repositories/Results_MDP/local_results/80_agents_5000It/80_agents_5000It.pkl', 'rb')
         x_hsdm, x_not_hsdm, residual_hsdm, residual_not_hsdm, sigma_HSDM, \
-            sigma_not_hsdm, cost_hsdm, cost_not_hsdm, T_horiz, N_random_tests, N_agents, x_osqp = pickle.load(f)
+            sigma_not_hsdm, cost_hsdm, cost_not_hsdm, cost_hsdm_history, cost_not_hsdm_history, T_horiz, N_random_tests, N_agents, x_osqp = pickle.load(f)
         f.close()
         x_hsdm_all.append(x_hsdm)
         x_not_hsdm_all.append(x_not_hsdm)
