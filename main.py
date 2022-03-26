@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
     print("Done")
     # Parameters of algorithm
-    N_iter=500000
+    N_iter=100000
 
     # containers for saved variables
     x_hsdm={}
@@ -83,7 +83,7 @@ if __name__ == '__main__':
 
     stepsize_primal=2*max(d).item()*N
     dual_stepsize = 0.1
-    stepsize_hsdm = 1
+    stepsize_hsdm = 0.1
     for n_init in range(N_random_initial_states):
         print("Testing initial state with index", n_init)
         for test in range(len(exponent_hsdm_to_test)):
