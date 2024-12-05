@@ -19,4 +19,6 @@ To execute the code, run `main.py`.
 ## Plotting
 To plot the result, collect the `.pkl` files that contain the experiments results in a subfolter `/Data`. Then, run `plot.py`.
 
-The data used in the paper is uploaded at [this link](...)
+The data used in the paper is uploaded at the following DOI:
+
+10.4121/8a4f4888-418b-4f0b-8d65-b88a43918956
